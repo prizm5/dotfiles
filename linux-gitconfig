@@ -1,0 +1,5 @@
+[user]
+	name = Nils Creque
+	email = nils.creque@smartstream-stp.com
+[core]
+	autocrlf = true
