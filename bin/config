@@ -1,0 +1,2 @@
+cd /c/development/v5/configs
+ruby copy-configs-script.rb

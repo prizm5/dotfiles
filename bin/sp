@@ -1,0 +1,175 @@
+#!/bin/bash
+
+#-------------------
+#  Pair Defintions
+#-------------------
+
+# Define user settings
+# FullUserName, UserEmail, sshKeyName, (optional)_preferedInitials
+mph=('Max P Haley' 'max.haley@smartstream-stp.com' 'mphaley' 'mph')
+mh=( "${mph[@]}" ) # this is an alias so mh == mph
+pb=('Patrick Boe' 'patrick.boe@smartstream-stp.com' 'pboe')
+mi=('Michael Irizarry' 'michael.irizarry@smartstream-stp.com' 'myirizar')
+bh=('Boguste Hameyie' 'boguste.hameyie@smartstream-stp.com' 'bhameyie')
+dc=('Shuwei Chen' 'david.chen@smartstream-stp.com' 'schen')
+nc=('Nils Creque' 'nils.creque@smartstream-stp.com' 'ncreque')
+ko=('Keith OBrien' 'keith.obrien@smartstream-stp.com' 'kdobrien')
+bm=('Becky Moran' 'mary.moran@smartstream-stp.com' 'mrtate')
+bt=( "${bm[@]}" )
+ss=('Steve Shogren' 'steve.shogren@smartstream-stp.com' 'sashogren')
+mw=('Mark Welser' 'mark.welser@smartstream-stp.com' 'mcwelser')
+dm=('Daniel Miladinov' 'daniel.miladinov@smartstream-stp.com' 'danielm')
+lm=('Lou Manco' 'lou.manco@smartstream-stp.com' 'lmanco')
+rb=('Rachel Barnes' 'rachel.barnes@smartstream-stp.com' 'rbarnes')
+ah=('Arlington Hamilton' 'arlington.hamilton@smartstream-stp.com' 'ahamilton')
+as=('Aman Siddiqi' 'aman.siddiqi@smartstream-stp.com' 'asiddiqi')
+pi=('Raspberry Pi' 'pi@rpi' 'pi')
+
+#-------------------
+#  Get Script Args
+#-------------------
+
+
+ARG_ARR=()
+SSH_ADD=true
+RELOAD_SSH_ONLY=false
+HELP_TEXT=false
+
+while test $# -gt 0; do
+  case "$1" in
+    --) shift; ARG_ARR+=(${@:$test}); break; ;;
+    -r|--reload) RELOAD_SSH_ONLY=true; shift; ;;
+    -n|--name-only) SSH_ADD=false; shift; ;;
+    -h|-?|--help) HELP_TEXT=true; shift; ;;
+    *) ARG_ARR+=($1); shift; continue; ;;
+  esac
+done
+
+if $HELP_TEXT; then
+  echo "sp - Set Pair, now in bash!"
+  echo ""
+  echo "usage: sp [options] user [users ..]"
+  echo ""
+  echo "options:"
+  echo "   --               only users after this"
+  echo "   -r --reload      reload ssh without updating the pair info"
+  echo "   -n --name-only   update the pair info without reloading ssh"
+  echo "   -h -? --help     show this screen"
+  echo ""
+  exit 0 # print the help only
+fi
+
+if [[ $SSH_ADD = false && $RELOAD_SSH_ONLY = true ]]; then
+  echo "warn: trying to update name only & reload ssh only. will act as normal" >&2
+  SSH_ADD=true
+  RELOAD_SSH_ONLY=false
+fi
+
+
+#------------------------
+#  Function Definitions
+#------------------------
+
+# function to enable initial-based name sorting
+reverse_string(){
+  local copy="${1}"
+  local len=${#copy}
+  for((i=$len-1;i>=0;i--)); do rev="$rev${copy:$i:1}"; done
+  echo "$rev"
+}
+
+# function to check if there is a definition
+checkdef(){
+  if [ -z "${!1}" ]; then echo "no definition for '${1}' :("; exit 1; fi
+}
+
+resolve_initials() {
+  local lookup="${1}[3]"
+  local init=${!lookup}
+  if [ -z "${init}" ]; then init=${1}; fi
+  echo "$init"
+}
+
+
+#-------------------
+#  Set Pair Action 
+#-------------------
+
+# error check for a least one user
+if [[ -z "${ARG_ARR[0]}" && $RELOAD_SSH_ONLY = false ]]; then echo "no user was supplied :("; exit 1; fi
+
+# check all user defs & add each in reverse for later sort
+rgitnames=()
+for def in "${ARG_ARR[@]}"; do
+  checkdef $def
+  rgitnames+=("$(reverse_string $(resolve_initials $def))")
+done
+
+# define master user info
+bash_masterinit="$(resolve_initials ${ARG_ARR[0]})"
+bash_emailid="${ARG_ARR[0]}[1]"
+bash_keyid="${ARG_ARR[0]}[2]"
+bash_mastername="${ARG_ARR[0]}[0]"
+bash_shortname=""
+gitemail=${!bash_emailid}
+gitkey=${!bash_keyid}
+gitmaster=${!bash_mastername}
+
+# update the git names
+gitnames=($(printf "%s\n" "${rgitnames[@]}" | sort))
+gitname=""
+for i in "${gitnames[@]}"
+do
+  lookup=$(reverse_string "$i")
+  bash_shortname="${bash_shortname}|${lookup}"
+  id=($lookup)
+  bash_nameid="$id[0]"
+  gitname="${gitname} & ${!bash_nameid}"
+done
+gitname=${gitname:3}
+bash_shortname="${bash_shortname:1}"
+
+homedir=~
+if ! $RELOAD_SSH_ONLY; then
+  # config git and announce
+  gitconfig="${homedir}/.gitconfig"
+  git config --file "$gitconfig" user.name "$gitname"
+  git config --file "$gitconfig" user.email "$gitemail"
+
+  echo "set pair to '$gitname'"
+  echo "set master as '$gitmaster'"
+
+  # This should allow for simple reset-pair op by just calling 'sp' w/o args
+  PAIR_MASTER="$gitmaster"; export PAIR_MASTER;
+  PAIR_SSHKEY="$gitkey"; export PAIR_SSHKEY;
+  PAIR_MASTER_INITIALS="$bash_masterinit"; export PAIR_MASTER_INITIALS;
+  PAIR_NAME="$gitname"; export PAIR_NAME;
+  PAIR_INITIALS="$bash_shortname"; export PAIR_INITIALS;
+
+  echo "PAIR_MASTER=\"$gitmaster\"; export PAIR_MASTER;" >| "$PAIR_ENV"
+  echo "PAIR_SSHKEY=\"$gitkey\"; export PAIR_SSHKEY;" >> "$PAIR_ENV"
+  echo "PAIR_MASTER_INITIALS=\"$bash_masterinit\"; export PAIR_MASTER_INITIALS;" >> "$PAIR_ENV"
+  echo "PAIR_NAME=\"$gitname\"; export PAIR_NAME;" >> "$PAIR_ENV"
+  echo "PAIR_INITIALS=\"$bash_shortname\"; export PAIR_INITIALS;" >> "$PAIR_ENV"
+fi
+
+if [ -e $PAIR_ENV ]; then
+  source $PAIR_ENV
+else
+  if [ -z "${gitkey}" ]; then
+    echo "error: unable to load pair infomation from environment" >&2
+    exit 1
+  fi
+fi
+
+if $SSH_ADD; then
+  # get the ssh key into the agent
+  # this is always be the last thing
+  if $RELOAD_SSH_ONLY; then
+    echo "master: '${PAIR_MASTER}' | ${PAIR_MASTER_INITIALS}"
+  fi
+  ssh-add -D
+  ssh-add "${homedir}/.ssh/${PAIR_SSHKEY}"
+fi
+
+exit 0 #success!
