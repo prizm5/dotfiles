@@ -6,23 +6,7 @@
 
 # Define user settings
 # FullUserName, UserEmail, sshKeyName, (optional)_preferedInitials
-mph=('Max P Haley' 'max.haley@smartstream-stp.com' 'mphaley' 'mph')
-mh=( "${mph[@]}" ) # this is an alias so mh == mph
-pb=('Patrick Boe' 'patrick.boe@smartstream-stp.com' 'pboe')
-mi=('Michael Irizarry' 'michael.irizarry@smartstream-stp.com' 'myirizar')
-bh=('Boguste Hameyie' 'boguste.hameyie@smartstream-stp.com' 'bhameyie')
-dc=('Shuwei Chen' 'david.chen@smartstream-stp.com' 'schen')
-nc=('Nils Creque' 'nils.creque@smartstream-stp.com' 'ncreque')
-ko=('Keith OBrien' 'keith.obrien@smartstream-stp.com' 'kdobrien')
-bm=('Becky Moran' 'mary.moran@smartstream-stp.com' 'mrtate')
-bt=( "${bm[@]}" )
-ss=('Steve Shogren' 'steve.shogren@smartstream-stp.com' 'sashogren')
-mw=('Mark Welser' 'mark.welser@smartstream-stp.com' 'mcwelser')
-dm=('Daniel Miladinov' 'daniel.miladinov@smartstream-stp.com' 'danielm')
-lm=('Lou Manco' 'lou.manco@smartstream-stp.com' 'lmanco')
-rb=('Rachel Barnes' 'rachel.barnes@smartstream-stp.com' 'rbarnes')
-ah=('Arlington Hamilton' 'arlington.hamilton@smartstream-stp.com' 'ahamilton')
-as=('Aman Siddiqi' 'aman.siddiqi@smartstream-stp.com' 'asiddiqi')
+nc=('Nils Creque' 'nils@nilscreque.com' 'ncreque')
 pi=('Raspberry Pi' 'pi@rpi' 'pi')
 
 #-------------------
